@@ -1,4 +1,4 @@
-package homedir
+package homedir // "github.com/BTBurke/go-homedir"
 
 import (
 	"bytes"
@@ -15,6 +15,9 @@ import (
 // DisableCache will disable caching of the home directory. Caching is enabled
 // by default.
 var DisableCache bool
+
+// WinPreferUserProfile will prefer %USERPROFILE% on windows systems
+var WinPreferUserProfile bool
 
 var homedirCache string
 var cacheLock sync.RWMutex
@@ -144,10 +147,13 @@ func dirWindows() (string, error) {
 	drive := os.Getenv("HOMEDRIVE")
 	path := os.Getenv("HOMEPATH")
 	home := drive + path
-	if drive == "" || path == "" {
-		home = os.Getenv("USERPROFILE")
+	userprofile := os.Getenv("USERPROFILE")
+
+	if userprofile != "" && WinPreferUserProfile {
+		return userprofile, nil
 	}
-	if home == "" {
+
+	if home == "" && userprofile == "" {
 		return "", errors.New("HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
 	}
 
